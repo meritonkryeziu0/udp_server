@@ -183,6 +183,16 @@ int main() {
                 }	
             }	
         }
+         else if (strcmp(message, "2") == 0) {	
+            userHasAccess = false;	
+        menu_noaccess:	
+            char choice[BUFLEN] = {};	
+            int choice_len;	
+            char filename[BUFLEN] = {};	
+            int filename_len;	
+            char overWriteText[1024 * 8] = {};	
+            int overWriteText_len;	
+            string fileStr;
 
             if (sendto(server_socket, message, strlen(message), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {
                 printf("sendto() failed with error code: %d", WSAGetLastError());

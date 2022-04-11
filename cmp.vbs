@@ -1,0 +1,1 @@
+X=MsgBox("Dite e bukur",0+64,"Title")
