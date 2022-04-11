@@ -151,6 +151,38 @@ int main() {
                         if (sendto(server_socket, fileStr.c_str(), strlen(fileStr.c_str()), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) { cout << recvfromError(); return 3; }
                         goto menu;
                         break;
+                            case '3': //write to file	
+                        if (sendto(server_socket, "-Jepni emrin e file te cilin deshironi ta ndryshoni: ", strlen("-Jepni emrin e file te cilin deshironi ta ndryshoni: "), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {	
+                            cout << recvfromError(); return 3;	
+                        }	
+                        if (filename_len = recvfrom(server_socket, filename, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) { cout << recvfromError(); exit(0); }	
+                        cout << filename;	
+                        if (sendto(server_socket, "-Jepni permbajtjen e re:", strlen("-Jepni permbajtjen e re:"), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {	
+                            cout << recvfromError(); return 3;	
+                        }	
+                        if (overWriteText_len = recvfrom(server_socket, overWriteText, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) { cout << recvfromError(); exit(0); }	
+                        fileWrite(filename, overWriteText);	
+                        cout << overWriteText;	
+                        goto menu;	
+                        break;	
+                    case '4': //execute	
+                        if (sendto(server_socket, "-Jepni emrin e file te cilin deshironi ta ekzekutoni: ", strlen("-Jepni emrin e file te cilin deshironi ta ekzekutoni: "), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {	
+                            cout << recvfromError(); return 3;	
+                        }	
+                        if (filename_len = recvfrom(server_socket, filename, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) { cout << recvfromError(); exit(0); }
+                            executeFile(filename);	
+                        goto menu;	
+                        break;	
+                    case '9': //exit	
+                        goto start;	
+                        break;	
+                    default:	
+                        goto menu;	
+                        break;	
+                    }	
+                }	
+            }	
+        }
 
             if (sendto(server_socket, message, strlen(message), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {
                 printf("sendto() failed with error code: %d", WSAGetLastError());
