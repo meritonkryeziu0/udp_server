@@ -44,7 +44,7 @@ string fileList() {
     const char* cmd = "FORFILES /c \"cmd /c echo @fname\" > files.txt";
     system(cmd);
     string contents = fileContent("files.txt");
-    //system("del files.txt");	
+    //system("del files.txt");  
     return contents;
 }
 void executeFile(const char* filename) {
@@ -114,6 +114,44 @@ int main() {
             else {
                 userHasAccess = false;
             }
+
+            if (userHasAccess) {
+                while (true) {
+                menu:
+                    char choice[BUFLEN] = {};
+                    int choice_len;
+                    char filename[BUFLEN] = {};
+                    int filename_len;
+                    char overWriteText[1024 * 8] = {};
+                    int overWriteText_len;
+                    string fileStr;
+                    if (sendto(server_socket, "[1] List files\n[2] Read files\n[3] Write to file\n[4] Execute\n[9] Exit", strlen("[1] List files\n[2] Read files\n[3] Write to file\n[4] Execute\n[9] Exit"), 0, (sockaddr*)&client, slen) == SOCKET_ERROR) {
+                        cout << recvfromError(); return 3;
+                    }
+                    if (choice_len = recvfrom(server_socket, choice, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) {
+                        cout << recvfromError(); exit(0);
+                    }
+                    printf("Choice: %s", choice);
+                    cout << "\n\n" << (int)choice[0] << endl;
+
+                    switch (choice[0]) {
+                    case '1': //list files
+                        fileStr = fileList();
+                        if (sendto(server_socket, fileStr.c_str(), strlen(fileStr.c_str()), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {
+                            cout << recvfromError(); return 3;
+                        }
+                        goto menu;
+                        break;
+                    case '2': //read files
+                        if (sendto(server_socket, "-Jepni emrin e file: ", strlen("-Jepni emrin e file: "), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) { cout << recvfromError(); return 3; }
+
+                        if (filename_len = recvfrom(server_socket, filename, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) { cout << recvfromError(); exit(0); }
+
+                        fileStr = fileContent(filename);
+                        if (sendto(server_socket, fileStr.c_str(), strlen(fileStr.c_str()), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) { cout << recvfromError(); return 3; }
+                        goto menu;
+                        break;
+
             if (sendto(server_socket, message, strlen(message), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {
                 printf("sendto() failed with error code: %d", WSAGetLastError());
                 return 3;
