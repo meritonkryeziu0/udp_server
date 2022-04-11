@@ -183,22 +183,8 @@ int main() {
                 }	
             }	
         }
-         else if (strcmp(message, "2") == 0) {	
-            userHasAccess = false;	
-        menu_noaccess:	
-            char choice[BUFLEN] = {};	
-            int choice_len;	
-            char filename[BUFLEN] = {};	
-            int filename_len;	
-            char overWriteText[1024 * 8] = {};	
-            int overWriteText_len;	
-            string fileStr;
-
-            if (sendto(server_socket, message, strlen(message), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {
-                printf("sendto() failed with error code: %d", WSAGetLastError());
-                return 3;
-            }
-            else if (strcmp(message, "2") == 0) {
+        
+      else if (strcmp(message, "2") == 0) {
                 userHasAccess = false;
             menu_noaccess:
                 char choice[BUFLEN] = {};
@@ -244,9 +230,17 @@ int main() {
                     break;
                 }
 
-                cout << "\n\n" << (int)choice[0] << endl;
-                closesocket(server_socket);
-                WSACleanup();
+           printf("Received packet from %s:%d\n", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+            cout << "userHasAccess: " << userHasAccess << endl;
+
+            if (sendto(server_socket, message, strlen(message), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR){
+                printf("sendto() failed with error code: %d", WSAGetLastError());
+                return 3;
             }
-            return 0;
+            cout << message << endl;
         }
+        closesocket(server_socket);
+        WSACleanup();
+    }
+    return 0;
+}
