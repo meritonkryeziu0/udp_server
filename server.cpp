@@ -14,11 +14,12 @@ using namespace std;
 
 int fileWrite(string filename, const char* textToWrite) {
     ofstream file;
-    file.write(textToWrite,sizeof(textToWrite)); //write into file 
-    file.close(); //close the file 
+    file.write(textToWrite, sizeof(textToWrite));    //write into file  
+    file.close();   //close the file  
     file.open(filename);
-    file<< textToWrite<< endl;
-    return 0 ;
+    file << textToWrite << endl;
+    file.close();
+    return 0;
 }
 
 string fileContent(string filename) {	
