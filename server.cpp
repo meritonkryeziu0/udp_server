@@ -22,35 +22,35 @@ int fileWrite(string filename, const char* textToWrite) {
     return 0;
 }
 
-string fileContent(string filename) {	
-    string data;	
-    string str;	
-    fstream rfile;	
-    rfile.open(filename);	
-    while (!rfile.eof()) {	
-        rfile >> data;	
-        str.append(data);	
-        str.append("\n");	
-    }	
-    return str;	
-}	
-string recvfromError() {	
-    return "recvfrom() failed with error code: " + WSAGetLastError();	
-}	
-string WSAStartupError() {	
-    return "Could not create socket: "+ WSAGetLastError();	
-}	
-string fileList() {	
-    const char* cmd = "FORFILES /c \"cmd /c echo @fname\" > files.txt";	
-    system(cmd);	
-    string contents = fileContent("files.txt");	
-    //system("del files.txt");	
-    return contents;	
-}	
-void executeFile(const char* filename) {	
-    system(filename);	
+string fileContent(string filename) {
+    string data;
+    string str;
+    fstream rfile;
+    rfile.open(filename);
+    while (!rfile.eof()) {
+        rfile >> data;
+        str.append(data);
+        str.append("\n");
+    }
+    return str;
 }
-    
+string recvfromError() {
+    return "recvfrom() failed with error code: " + WSAGetLastError();
+}
+string WSAStartupError() {
+    return "Could not create socket: " + WSAGetLastError();
+}
+string fileList() {
+    const char* cmd = "FORFILES /c \"cmd /c echo @fname\" > files.txt";
+    system(cmd);
+    string contents = fileContent("files.txt");
+    //system("del files.txt");	
+    return contents;
+}
+void executeFile(const char* filename) {
+    system(filename);
+}
+
 int main() {
     system("title UDP Server");
     sockaddr_in server, client;
@@ -102,42 +102,71 @@ int main() {
             int username_len;
             int password_len;
             //Send login, print errors if they occured
-            if (sendto(server_socket, "-Enter username:", strlen("-Enter username:"), 0, (sockaddr*)&client, slen) == SOCKET_ERROR) {cout << recvfromError(); return 3;}
-            if (username_len = recvfrom(server_socket, username, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR){cout << recvfromError();exit(0);}
-            if (sendto(server_socket, "-Enter password:", strlen("-Enter password:"), 0, (sockaddr*)&client, slen) == SOCKET_ERROR){cout << recvfromError();return 3;}
-            if (password_len = recvfrom(server_socket, password, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR){cout << recvfromError();exit(0);}
-            cout << "username: " << username<<endl;
-            cout << "passwrod: " << password<<endl;
+            if (sendto(server_socket, "-Enter username:", strlen("-Enter username:"), 0, (sockaddr*)&client, slen) == SOCKET_ERROR) { cout << recvfromError(); return 3; }
+            if (username_len = recvfrom(server_socket, username, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) { cout << recvfromError(); exit(0); }
+            if (sendto(server_socket, "-Enter password:", strlen("-Enter password:"), 0, (sockaddr*)&client, slen) == SOCKET_ERROR) { cout << recvfromError(); return 3; }
+            if (password_len = recvfrom(server_socket, password, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) { cout << recvfromError(); exit(0); }
+            cout << "username: " << username << endl;
+            cout << "passwrod: " << password << endl;
             if (strcmp(username, "admin") == 0 && strcmp(password, "admin") == 0) {
                 userHasAccess = true;
             }
             else {
                 userHasAccess = false;
             }
-        if (sendto(server_socket, message, strlen(message), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR){
-            printf("sendto() failed with error code: %d", WSAGetLastError());
-            return 3;
+            if (sendto(server_socket, message, strlen(message), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) {
+                printf("sendto() failed with error code: %d", WSAGetLastError());
+                return 3;
+            }
+            else if (strcmp(message, "2") == 0) {
+                userHasAccess = false;
+            menu_noaccess:
+                char choice[BUFLEN] = {};
+                int choice_len;
+                char filename[BUFLEN] = {};
+                int filename_len;
+                char overWriteText[1024 * 8] = {};
+                int overWriteText_len;
+                string fileStr;
+                if (sendto(server_socket, "[1] List files\n[2] Read files\n[9] Exit", strlen("[1] List files\n[2] Read files\n[9] Exit"), 0, (sockaddr*)&client, slen) == SOCKET_ERROR) {
+                    cout << recvfromError(); return 3;
+                }
+                if (choice_len = recvfrom(server_socket, choice, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) {
+                    cout << recvfromError(); exit(0);
+                }
+                printf("Choice: %s", choice);
+                switch (choice[0])
+                {
+                case '1': //list files
+                    fileStr = fileList();
+                    if (sendto(server_socket, fileStr.c_str(), strlen(fileStr.c_str()), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR)
+                    {
+                        cout << recvfromError();
+                        return 3;
+                    }
+                    goto menu_noaccess;
+                    break;
+                case '2': //read files
+                    if (sendto(server_socket, "-Jepni emrin e file: ", strlen("-Jepni emrin e file: "), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) { cout << recvfromError(); return 3; }
+
+                    if (filename_len = recvfrom(server_socket, filename, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) { cout << recvfromError(); exit(0); }
+
+                    fileStr = fileContent(filename);
+                    if (sendto(server_socket, fileStr.c_str(), strlen(fileStr.c_str()), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR) { cout << recvfromError(); return 3; }
+                    goto menu_noaccess;
+                    break;
+                case '9': //exit
+                    goto start;
+                    //exit(1);
+                    break;
+                default:
+                    goto menu_noaccess;
+                    break;
+                }
+
+                cout << "\n\n" << (int)choice[0] << endl;
+                closesocket(server_socket);
+                WSACleanup();
+            }
+            return 0;
         }
-        else if (strcmp(message, "2") == 0) {
-            userHasAccess = false;
-        menu_noaccess:
-            char choice[BUFLEN] = {};
-            int choice_len;
-            char filename[BUFLEN] = {};
-            int filename_len;
-            char overWriteText[1024 * 8] = {};
-            int overWriteText_len;
-            string fileStr;
-            if (sendto(server_socket, "[1] List files\n[2] Read files\n[9] Exit", strlen("[1] List files\n[2] Read files\n[9] Exit"), 0, (sockaddr*)&client, slen) == SOCKET_ERROR) {
-                cout << recvfromError(); return 3;
-            }
-            if (choice_len = recvfrom(server_socket, choice, BUFLEN, 0, (sockaddr*)&client, &slen) == SOCKET_ERROR) {
-                cout << recvfromError(); exit(0);
-            }
-            printf("Choice: %s", choice);
-            cout << "\n\n" << (int)choice[0] << endl;
-        closesocket(server_socket);
-        WSACleanup();
-    }
-    return 0;
-}
